@@ -53,8 +53,9 @@ jobs:
           cd "$RUNNER_TEMP/emsdk"
           ./emsdk install 6.0.12
           ./emsdk activate 6.0.12
-          # 之後的步驟也要找得到 emcc：把這兩個資料夾加進 PATH
-          echo "$RUNNER_TEMP/emsdk" >> "$GITHUB_PATH"
+          # 之後的步驟也要找得到 emcc：只把 emcc 所在的資料夾加進 PATH。
+          # 不能加 emsdk 本身的資料夾：裡面有一個叫 node 的「資料夾」，
+          # 會擋在真正的 node 前面，make 執行 node 時就變成「Permission denied」
           echo "$RUNNER_TEMP/emsdk/upstream/emscripten" >> "$GITHUB_PATH"
 
       # 分成幾步：哪一步失敗，在 Actions 頁面一眼就看得出來
