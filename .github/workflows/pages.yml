@@ -61,11 +61,13 @@ jobs:
       - name: Check emcc
         run: emcc --version
 
+      # make 失敗時，把最後 20 行輸出變成 Actions 頁面上的錯誤標記（annotations），
+      # 不用點開日誌就看得到錯在哪
       - name: Build engine (comet)
-        run: make -C comet web
+        run: nova-system/.github/run-and-report.sh make -C comet web
 
       - name: Build web Nova
-        run: make -C nova-system web
+        run: nova-system/.github/run-and-report.sh make -C nova-system web
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
