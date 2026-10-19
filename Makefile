@@ -8,17 +8,20 @@
 #   make clean   清除編譯結果
 #
 # 引擎預設在旁邊的 ../comet；在別的地方的話：make serve ENGINE=/path/to/comet
-# 內建遊戲：Wildkin 在旁邊的 ../wildkin；接方塊、輸入測試是 comet 附的範例遊戲
+# 內建遊戲（web/games.json）：Wildkin 在旁邊的 ../wildkin；事故報告在旁邊的 ../incident-report。
+# 事故報告的資源包要用 Blender 產生，GitHub Actions 做不出來，所以是「有就放」：
+# 本機有 ../incident-report/build/ 才會放進去，沒有的話大廳就不列它（nova.js 會跳過找不到的遊戲）
 
 ENGINE ?= ../comet
 WILDKIN ?= ../wildkin
+INCIDENT ?= ../incident-report
 PORT ?= 8422
 
 # 網頁版 Nova 要用到的引擎檔案（只拿需要的，Studio 之類的不放進來）
 ENGINE_FILES = comet.wasm comet.js input.js touchpad.js padmenu.js play.css
 
 # 系統卡匣：和遊戲一樣，用引擎附的合併工具（web/games.json 的遊戲名稱也要放進字型）
-build/system.lua: comet.json $(wildcard src/*.lua) web/games.json
+build/system.lua: comet.json $(wildcard src/*.lua) web/games.json $(wildcard assets/covers/*.png)
 	node $(ENGINE)/tools/cart.mjs .
 
 # 1. 用引擎自己的 Makefile 編譯網頁版（引擎有改過才會重新編譯）
@@ -32,7 +35,10 @@ web: build/system.lua $(wildcard web/*)
 	cp web/* build/web/
 	cp build/system.lua build/web/system.lua
 	cp $(WILDKIN)/build/wildkin.lua build/web/games/
-	cp $(ENGINE)/games/catch.lua $(ENGINE)/games/move_box.lua build/web/games/
+	rm -f build/web/games/incident.*
+	if [ -f $(INCIDENT)/build/incident.lua ] && [ -f $(INCIDENT)/build/incident.pak ]; then \
+		cp $(INCIDENT)/build/incident.lua $(INCIDENT)/build/incident.pak build/web/games/; \
+	else echo "（沒有 $(INCIDENT)/build/incident.lua：這次不放事故報告）"; fi
 
 serve: web
 	@echo "電腦：http://localhost:$(PORT)"

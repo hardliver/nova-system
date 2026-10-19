@@ -4,6 +4,10 @@
   "sources": [
     "src/main.lua"
   ],
+  "images": {
+    "cover_wildkin": { "file": "assets/covers/wildkin.png", "tile": 64 },
+    "cover_incident": { "file": "assets/covers/incident-report.png", "tile": 64 }
+  },
   "fontText": [
     "web/games.json"
   ],

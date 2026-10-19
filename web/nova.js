@@ -97,15 +97,23 @@ try {
 }
 
 // ---- 遊戲清單：games.json ----
-// [{ id, name, file }]：id 和遊戲檔開頭的「-- id:」相同，file 是遊戲檔的網址。
+// [{ id, name, desc, players, file, pak }]：id 和遊戲檔開頭的「-- id:」相同，file 是遊戲檔的網址，
+// pak 是資源包的網址（沒有就不寫）。desc、players 只給大廳顯示用。
+// 列了但伺服器上找不到檔案的遊戲（例如 GitHub Pages 上沒有事故報告）直接跳過，大廳不會出現。
 // 之後的商城（N7、N8）會換成「從 nova-official 的精選清單下載」，系統卡匣不用改
-const gameFiles = new Map();   // id → 網址
+const gameInfo = new Map();   // id → { file, pak }
 try {
     const list = await fetch("games.json").then((r) => r.json());
+    // 同時問每個遊戲檔在不在（HEAD 只拿檔頭，不下載內容）
+    const exists = await Promise.all(list.map((g) =>
+        fetch(g.file, { method: "HEAD" }).then((r) => r.ok).catch(() => false)));
     engine.clearGames();
-    for (const g of list) {
-        if (engine.addGame(g.id, g.name) === 0) gameFiles.set(g.id, g.file);
-    }
+    list.forEach((g, i) => {
+        if (!exists[i]) return;
+        if (engine.addGame(g.id, g.name, { desc: g.desc, players: g.players }) === 0) {
+            gameInfo.set(g.id, { file: g.file, pak: g.pak || null });
+        }
+    });
 } catch (e) {
     showHint(`讀不到遊戲清單 games.json（${e.message}）`);
 }
@@ -118,20 +126,33 @@ if (engine.loadSystem(systemSource) !== 0) {
 // 系統卡匣呼叫 sys.launch(id)、或玩家按 HOME 時，引擎只記下「請求」。
 // 每跑完一幀，這裡看一次有沒有請求，有就去做（說明見 comet 的 core/system.h）
 const sources = new Map();     // 讀過的遊戲檔留著，下次啟動不用再下載
+const paks = new Map();        // 讀過的資源包也留著（Uint8Array）
 let loading = false;
 
 function randomSeed() {
     return crypto.getRandomValues(new Uint32Array(1))[0] || 1;
 }
 
+async function fetchText(url) {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.text();
+}
+
+async function fetchBytes(url) {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`資源包 HTTP ${res.status}`);
+    return new Uint8Array(await res.arrayBuffer());
+}
+
 async function launch(id) {
     loading = true;
     try {
-        if (!sources.has(id)) {
-            const res = await fetch(gameFiles.get(id));
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            sources.set(id, await res.text());
-        }
+        const info = gameInfo.get(id);
+        if (!sources.has(id)) sources.set(id, await fetchText(info.file));
+        if (info.pak && !paks.has(id)) paks.set(id, await fetchBytes(info.pak));
+        // 資源包要在 load() 之前交給引擎；沒有資源包的遊戲設成 null（順便放掉上一款的）
+        if (engine.setPak(info.pak ? paks.get(id) : null) !== 0) throw new Error("資源包格式不對");
         // 和 Comet 遊玩頁一樣：每次開局新的亂數種子，從載入前就開始錄重播（之後成就驗證用）
         engine.setSeed(randomSeed());
         engine.recordBegin();
@@ -147,6 +168,12 @@ async function launch(id) {
     }
 }
 
+function goHome() {
+    engine.replayStop();
+    engine.setPak(null);   // 大廳用不到資源包：還給記憶體（JS 這邊的 paks 還留著，下次不用再下載）
+    engine.loadSystem(systemSource);
+}
+
 function afterFrame() {
     if (loading) return;   // 還在下載上一款：請求留著，下載完再看
     const req = engine.request();
@@ -156,8 +183,7 @@ function afterFrame() {
         launch(id);
     } else if (req === 2) {
         engine.requestDone();
-        engine.replayStop();
-        engine.loadSystem(systemSource);
+        goHome();
     }
 }
 
