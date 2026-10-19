@@ -1,0 +1,9 @@
+{
+  "name": "Nova",
+  "short_name": "Nova",
+  "start_url": ".",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#000000",
+  "theme_color": "#000000"
+}

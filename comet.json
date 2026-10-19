@@ -1,0 +1,8 @@
+{
+  "name": "Nova",
+  "id": "hardliver/nova-system",
+  "sources": [
+    "src/main.lua"
+  ],
+  "output": "build/system.lua"
+}

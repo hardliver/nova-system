@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#000000">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Nova</title>
+<!-- 畫面、虛擬手把的樣式和 Comet 遊玩頁共用（從 comet 複製過來） -->
+<link rel="stylesheet" href="play.css">
+<style>
+  /* Nova 自己的部分：開機畫面 */
+  body { background: #000; }
+
+  .boot {
+    position: fixed;
+    inset: 0;
+    z-index: 40;                    /* 蓋在虛擬手把上面：開機前按哪裡都算「開始」 */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    background: #000;
+    color: #ddd;
+    cursor: pointer;
+  }
+  .boot.hidden { display: none; }
+  .boot .logo {
+    font-size: 44px;
+    letter-spacing: 0.5em;
+    margin-right: -0.5em;           /* letter-spacing 最後一個字也會多一格，補回來才置中 */
+    color: #fff;
+  }
+  .boot .press {
+    font-size: 18px;
+    color: #ffa300;
+    animation: blink 1.2s steps(1) infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+  .boot .keys { font-size: 13px; color: #666; line-height: 1.8; text-align: center; }
+  @media (pointer: coarse) { .boot .keys { display: none; } }
+</style>
+</head>
+<body data-preset="xbox" data-screen="fit">
+
+<canvas id="screen" width="320" height="240"></canvas>
+
+<!-- 開機畫面：瀏覽器規定全螢幕、聲音要等使用者「按了東西」才能開，
+     所以先請玩家按任意鍵，一次解鎖 -->
+<div class="boot" id="boot">
+  <div class="logo">NOVA</div>
+  <div class="press" id="press">按任意鍵開始</div>
+  <div class="keys">
+    鍵盤：WASD 移動　K = A　L = B　Enter = Start　Tab = Select<br>
+    回主選單：手把的 HOME 鍵，或按住 Start＋Select
+  </div>
+</div>
+
+<!-- 虛擬手把（手機）：和 Comet 遊玩頁相同，位置、大小由 touchpad.js 設定 -->
+<div class="pad-layer" id="pad-layer">
+  <div class="stick" id="lstick" data-ctl="lstick"><div class="knob"></div></div>
+  <div class="pad" id="dpad" data-ctl="dpad"><div class="cross"></div></div>
+  <div class="face" id="face" data-ctl="face">
+    <div class="round y" data-face="9">Y</div>
+    <div class="round x" data-face="8">X</div>
+    <div class="round b" data-face="5">B</div>
+    <div class="round a" data-face="4">A</div>
+  </div>
+  <div class="stick" id="rstick" data-ctl="rstick"><div class="knob"></div></div>
+  <div class="pill" data-ctl="L" data-btn="10">L</div>
+  <div class="pill" data-ctl="R" data-btn="11">R</div>
+  <div class="pill" data-ctl="select" data-btn="7">SELECT</div>
+  <div class="pill" data-ctl="start" data-btn="6">START</div>
+</div>
+
+<div class="hint" id="hint"></div>
+
+<script type="module" src="nova.js"></script>
+</body>
+</html>
