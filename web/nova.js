@@ -95,13 +95,71 @@ try {
     throw e;
 }
 
-// 遊戲清單：N5 從 games.json 讀；現在是空的
-engine.clearGames();
+// ---- 遊戲清單：games.json ----
+// [{ id, name, file }]：id 和遊戲檔開頭的「-- id:」相同，file 是遊戲檔的網址。
+// 之後的商城（N7、N8）會換成「從 nova-official 的精選清單下載」，系統卡匣不用改
+const gameFiles = new Map();   // id → 網址
+try {
+    const list = await fetch("games.json").then((r) => r.json());
+    engine.clearGames();
+    for (const g of list) {
+        if (engine.addGame(g.id, g.name) === 0) gameFiles.set(g.id, g.file);
+    }
+} catch (e) {
+    showHint(`讀不到遊戲清單 games.json（${e.message}）`);
+}
 
 if (engine.loadSystem(systemSource) !== 0) {
     $("press").textContent = "系統卡匣執行錯誤（看提示框或主控台）";
 }
 
+// ---- 平台的工作：啟動遊戲、回 HOME ----
+// 系統卡匣呼叫 sys.launch(id)、或玩家按 HOME 時，引擎只記下「請求」。
+// 每跑完一幀，這裡看一次有沒有請求，有就去做（說明見 comet 的 core/system.h）
+const sources = new Map();     // 讀過的遊戲檔留著，下次啟動不用再下載
+let loading = false;
+
+function randomSeed() {
+    return crypto.getRandomValues(new Uint32Array(1))[0] || 1;
+}
+
+async function launch(id) {
+    loading = true;
+    try {
+        if (!sources.has(id)) {
+            const res = await fetch(gameFiles.get(id));
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            sources.set(id, await res.text());
+        }
+        // 和 Comet 遊玩頁一樣：每次開局新的亂數種子，從載入前就開始錄重播（之後成就驗證用）
+        engine.setSeed(randomSeed());
+        engine.recordBegin();
+        if (engine.load(sources.get(id)) !== 0) {
+            engine.replayStop();
+            showHint("遊戲啟動時出錯（看主控台）。按住 Start＋Select 回 HOME");
+        }
+    } catch (e) {
+        showHint(`讀不到遊戲 ${id}（${e.message}）`);
+        engine.loadSystem(systemSource);   // 回到大廳（清掉「載入中」）
+    } finally {
+        loading = false;
+    }
+}
+
+function afterFrame() {
+    if (loading) return;   // 還在下載上一款：請求留著，下載完再看
+    const req = engine.request();
+    if (req === 1) {
+        const id = engine.requestGame();
+        engine.requestDone();
+        launch(id);
+    } else if (req === 2) {
+        engine.requestDone();
+        engine.replayStop();
+        engine.loadSystem(systemSource);
+    }
+}
+
 await waitForStart();
 $("boot").classList.add("hidden");
-startLoop(engine, $("screen"), getInput);
+startLoop(engine, $("screen"), getInput, { afterFrame });

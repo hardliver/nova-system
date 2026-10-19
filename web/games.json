@@ -1,0 +1,5 @@
+[
+  { "id": "hardliver/wildkin", "name": "Wildkin 野伴", "file": "games/wildkin.lua" },
+  { "id": "comet/catch", "name": "接方塊", "file": "games/catch.lua" },
+  { "id": "comet/move-box", "name": "輸入測試", "file": "games/move_box.lua" }
+]

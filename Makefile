@@ -7,25 +7,31 @@
 #   make clean   清除編譯結果
 #
 # 引擎預設在旁邊的 ../comet；在別的地方的話：make serve ENGINE=/path/to/comet
+# 內建遊戲：Wildkin 在旁邊的 ../wildkin；接方塊、輸入測試是 comet 附的範例遊戲
 
 ENGINE ?= ../comet
+WILDKIN ?= ../wildkin
 PORT ?= 8422
 
 # 網頁版 Nova 要用到的引擎檔案（只拿需要的，Studio 之類的不放進來）
 ENGINE_FILES = comet.wasm comet.js input.js touchpad.js play.css
 
-# 系統卡匣：和遊戲一樣，用引擎附的合併工具
-build/system.lua: comet.json $(wildcard src/*.lua)
+# 系統卡匣：和遊戲一樣，用引擎附的合併工具（web/games.json 的遊戲名稱也要放進字型）
+build/system.lua: comet.json $(wildcard src/*.lua) web/games.json
 	node $(ENGINE)/tools/cart.mjs .
 
 # 1. 用引擎自己的 Makefile 編譯網頁版（引擎有改過才會重新編譯）
 # 2. 從引擎拿需要的檔案，再放上 Nova 自己的網頁和系統卡匣
+# 3. 內建遊戲放進 games/（games.json 列的檔名）。Wildkin 用它自己的 Makefile 合併
 web: build/system.lua $(wildcard web/*)
 	$(MAKE) -C $(ENGINE) web
-	mkdir -p build/web
+	$(MAKE) -C $(WILDKIN) build/wildkin.lua ENGINE=$(abspath $(ENGINE))
+	mkdir -p build/web/games
 	cd $(ENGINE)/build/web && cp $(ENGINE_FILES) $(CURDIR)/build/web/
 	cp web/* build/web/
 	cp build/system.lua build/web/system.lua
+	cp $(WILDKIN)/build/wildkin.lua build/web/games/
+	cp $(ENGINE)/games/catch.lua $(ENGINE)/games/move_box.lua build/web/games/
 
 serve: web
 	@echo "電腦：http://localhost:$(PORT)"

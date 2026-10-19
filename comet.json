@@ -4,5 +4,8 @@
   "sources": [
     "src/main.lua"
   ],
+  "fontText": [
+    "web/games.json"
+  ],
   "output": "build/system.lua"
 }

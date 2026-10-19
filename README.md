@@ -27,6 +27,6 @@ make serve        # 瀏覽器開 http://localhost:8422
 ## 進度
 
 - [x] N4：開機畫面「按任意鍵開始」（手機上順便全螢幕）、系統卡匣 HOME 畫面
-- [ ] N5：大廳：列出內建遊戲、啟動、回 HOME
+- [x] N5：大廳：列出內建遊戲（Wildkin、接方塊、輸入測試）、啟動、回 HOME
 - [ ] N6：部署到 GitHub Pages（https://hardliver.github.io/nova-system）
 - [ ] N6b：本機架站用的 `nova-web.zip`
