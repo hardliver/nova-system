@@ -46,21 +46,26 @@ jobs:
         with:
           node-version: 22
 
+      # 和本機（brew 的 emscripten 6.0.12）同一個版本，編出來的 wasm 才和本機一樣
       - name: Install emscripten
         run: |
           git clone --depth 1 https://github.com/emscripten-core/emsdk.git "$RUNNER_TEMP/emsdk"
           cd "$RUNNER_TEMP/emsdk"
-          ./emsdk install latest
-          ./emsdk activate latest
-          # 之後的步驟也要找得到 emcc：把 emsdk 設定的 PATH 交給 GitHub Actions
-          source ./emsdk_env.sh
-          echo "$PATH" | tr ':' '\n' | grep emsdk >> "$GITHUB_PATH"
-          echo "EMSDK=$EMSDK" >> "$GITHUB_ENV"
+          ./emsdk install 6.0.12
+          ./emsdk activate 6.0.12
+          # 之後的步驟也要找得到 emcc：把這兩個資料夾加進 PATH
+          echo "$RUNNER_TEMP/emsdk" >> "$GITHUB_PATH"
+          echo "$RUNNER_TEMP/emsdk/upstream/emscripten" >> "$GITHUB_PATH"
 
-      - name: Build
-        run: |
-          emcc --version | head -1
-          make -C nova-system web
+      # 分成幾步：哪一步失敗，在 Actions 頁面一眼就看得出來
+      - name: Check emcc
+        run: emcc --version
+
+      - name: Build engine (comet)
+        run: make -C comet web
+
+      - name: Build web Nova
+        run: make -C nova-system web
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
