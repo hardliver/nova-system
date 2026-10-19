@@ -4,11 +4,12 @@
 // 外殼只做「平台」的事：輸入、畫面、開機畫面、載入檔案；
 // 主選單長什麼樣子、怎麼選遊戲，全部寫在系統卡匣（src/main.lua），和主機共用。
 //
-// 引擎、輸入、虛擬手把的程式從 comet 複製過來（make 時），不在這個 repo 裡。
+// 引擎、輸入、虛擬手把（含設定選單）的程式從 comet 複製過來（make 時），不在這個 repo 裡。
 
 import { createEngine, startLoop } from "./comet.js";
 import { setupKeyboard, setupTouch, readGamepad, connectedPads, merge } from "./input.js";
 import { setupTouchpad } from "./touchpad.js";
+import { setupPadMenu } from "./padmenu.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -23,7 +24,7 @@ function showHint(text, ms = 6000) {
 
 // ---- 輸入：和 Comet 遊玩頁一樣 ----
 // 1 號玩家：鍵盤、觸控、第 1 支手把；2–4 號玩家：第 2–4 支手把
-setupTouchpad();
+setupPadMenu(setupTouchpad(), showHint);   // 手機右上角的選單：按鍵配置、透明度、調整位置、全螢幕
 const keyboard = setupKeyboard();
 const touch = setupTouch(document);
 function getInput(player) {

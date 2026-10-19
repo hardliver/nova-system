@@ -1,0 +1,78 @@
+# 部署網頁版 Nova 到 GitHub Pages：https://hardliver.github.io/nova-system
+#
+# 每次 push 到 main（或在 Actions 頁面按「Run workflow」）：
+#   1. 把 nova-system、comet、wildkin 三個 repo 放在同一層（和本機 ~/projects/nova 一樣）
+#   2. 安裝 emscripten、Node.js
+#   3. make web：編譯引擎、合併系統卡匣和 Wildkin，產生 build/web/
+#   4. 把 build/web/ 發布到 GitHub Pages
+#
+# 第一次使用前：repo 的 Settings → Pages → Source 選「GitHub Actions」。
+# comet、wildkin 改了以後，網頁版不會自動更新：到這裡的 Actions 頁面手動 Run workflow。
+
+name: Deploy web Nova
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 同時只跑一個部署；新的來了，舊的還沒部署完就取消
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: nova-system
+      - uses: actions/checkout@v4
+        with:
+          repository: hardliver/comet-engine
+          path: comet
+      - uses: actions/checkout@v4
+        with:
+          repository: hardliver/wildkin
+          path: wildkin
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install emscripten
+        run: |
+          git clone --depth 1 https://github.com/emscripten-core/emsdk.git "$RUNNER_TEMP/emsdk"
+          cd "$RUNNER_TEMP/emsdk"
+          ./emsdk install latest
+          ./emsdk activate latest
+          # 之後的步驟也要找得到 emcc：把 emsdk 設定的 PATH 交給 GitHub Actions
+          source ./emsdk_env.sh
+          echo "$PATH" | tr ':' '\n' | grep emsdk >> "$GITHUB_PATH"
+          echo "EMSDK=$EMSDK" >> "$GITHUB_ENV"
+
+      - name: Build
+        run: |
+          emcc --version | head -1
+          make -C nova-system web
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: nova-system/build/web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

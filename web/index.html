@@ -77,6 +77,34 @@
   <div class="pill" data-ctl="start" data-btn="6">START</div>
 </div>
 
+<!-- 手機：右上角的選單（虛擬手把設定、全螢幕）。按鈕的程式在 comet 的 padmenu.js -->
+<button class="menu-btn" id="btn-menu">☰</button>
+
+<div class="menu-pop" id="menu">
+  <div class="menu-title">按鍵配置</div>
+  <div class="seg" id="seg-preset">
+    <button class="tool" data-preset="xbox">Xbox</button>
+    <button class="tool" data-preset="switch">Switch</button>
+    <button class="tool" data-preset="nes">紅白機</button>
+  </div>
+  <div class="menu-title">畫面（橫拿時）</div>
+  <div class="seg" id="seg-screen">
+    <button class="tool" data-screen="fit">原比例</button>
+    <button class="tool" data-screen="stretch">拉寬</button>
+  </div>
+  <label>透明度 <input type="range" id="opacity" min="0.15" max="1" step="0.05"></label>
+  <button class="tool" id="btn-edit">調整按鍵位置</button>
+  <button class="tool" id="btn-fullscreen">全螢幕</button>
+  <button class="tool" id="btn-close-menu">關閉</button>
+</div>
+
+<div class="edit-bar" id="edit-bar">
+  <button class="tool" id="btn-smaller">縮小</button>
+  <button class="tool" id="btn-bigger">放大</button>
+  <button class="tool" id="btn-reset">重設</button>
+  <button class="tool done" id="btn-done">完成</button>
+</div>
+
 <div class="hint" id="hint"></div>
 
 <script type="module" src="nova.js"></script>

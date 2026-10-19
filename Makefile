@@ -14,7 +14,7 @@ WILDKIN ?= ../wildkin
 PORT ?= 8422
 
 # 網頁版 Nova 要用到的引擎檔案（只拿需要的，Studio 之類的不放進來）
-ENGINE_FILES = comet.wasm comet.js input.js touchpad.js play.css
+ENGINE_FILES = comet.wasm comet.js input.js touchpad.js padmenu.js play.css
 
 # 系統卡匣：和遊戲一樣，用引擎附的合併工具（web/games.json 的遊戲名稱也要放進字型）
 build/system.lua: comet.json $(wildcard src/*.lua) web/games.json
