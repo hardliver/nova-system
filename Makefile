@@ -4,6 +4,7 @@
 #   make         產生系統卡匣 build/system.lua
 #   make web     產生網頁版 Nova 到 build/web/（引擎從 comet 編譯、複製過來）
 #   make serve   瀏覽器開 http://localhost:8422
+#   make zip     本機架站用的 build/nova-web.zip（網頁檔案＋一鍵啟動腳本，見 local/）
 #   make clean   清除編譯結果
 #
 # 引擎預設在旁邊的 ../comet；在別的地方的話：make serve ENGINE=/path/to/comet
@@ -38,7 +39,16 @@ serve: web
 	@for i in en0 en1 en2; do ip=$$(ipconfig getifaddr $$i 2>/dev/null) && echo "手機：http://$$ip:$(PORT)"; done; true
 	python3 $(ENGINE)/tools/serve.py $(PORT) build/web
 
+# 本機架站：網頁檔案和啟動腳本放進 nova-web/ 資料夾，再壓成 zip
+# zip -X：不放 Mac 的額外屬性；啟動腳本的「可以執行」權限會保留
+zip: web
+	rm -rf build/nova-web build/nova-web.zip
+	cp -R build/web build/nova-web
+	cp local/* build/nova-web/
+	cd build && zip -qrX nova-web.zip nova-web
+	@echo "已產生 build/nova-web.zip"
+
 clean:
 	rm -rf build
 
-.PHONY: web serve clean
+.PHONY: web serve zip clean

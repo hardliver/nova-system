@@ -29,7 +29,7 @@ make serve        # 瀏覽器開 http://localhost:8422
 - [x] N4：開機畫面「按任意鍵開始」（手機上順便全螢幕）、系統卡匣 HOME 畫面
 - [x] N5：大廳：列出內建遊戲（Wildkin、接方塊、輸入測試）、啟動、回 HOME
 - [x] N6：部署到 GitHub Pages（https://hardliver.github.io/nova-system）：`.github/workflows/pages.yml`；手機的虛擬手把設定選單
-- [ ] N6b：本機架站用的 `nova-web.zip`
+- [x] N6b：本機架站用的 `nova-web.zip`（`make zip`；推版本標籤時自動附在 Release）
 
 ## 部署（GitHub Pages）
 
@@ -39,3 +39,15 @@ push 到 main 時，`.github/workflows/pages.yml` 會把 nova-system、comet、w
 - 第一次：repo 的 Settings → Pages → Source 選「GitHub Actions」
 - comet 或 wildkin 改了以後，網頁版不會自動更新：到 Actions 頁面選「Deploy web Nova」→ Run workflow
 - comet、wildkin 必須是公開 repo（Actions 才抓得到）
+
+## 本機架站（nova-web.zip）
+
+不靠 GitHub、不用網路也能玩：`make zip` 產生 `build/nova-web.zip`，
+解壓縮後雙擊 `start.command`（Mac）／`start.bat`（Windows）／執行 `./start.sh`（Linux）。
+啟動腳本和說明在 `local/`。
+
+發布新版本時，推一個版本標籤，Actions 會建立 Release 並附上 zip：
+
+```
+git tag v0.1.0 && git push origin v0.1.0
+```
